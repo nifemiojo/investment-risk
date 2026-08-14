@@ -172,8 +172,8 @@ class VaREngine:
         return VaRBrief(
             date=date,
             var_pct=var_pct,
-            var_currency=var_pct * self.portfolio.notional,
-            budget_utilisation_pct=var_pct / self.portfolio.risk_budget_pct,
+            var_currency=var_pct * self.portfolio.nav,
+            budget_utilisation_pct=var_pct / self.portfolio.risk_budget_annual_pct,
             var_percentile=percentile,
             change_pct=change.pct,
             change_z=change.z_score,
@@ -283,8 +283,8 @@ from src.display.brief_renderer import render_daily_brief_markdown
 # Cell 2: Parameters
 PORTFOLIO = Portfolio(
     assets={'SPY': 0.40, 'EFA': 0.20, 'IEF': 0.25, 'GLD': 0.15},
-    notional=10_000_000,
-    risk_budget_pct=0.15,
+    nav=10_000_000,
+    risk_budget_annual_pct=0.15,
     var_confidence=0.95,
     var_window=252,
 )

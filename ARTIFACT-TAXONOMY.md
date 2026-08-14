@@ -38,7 +38,7 @@ An "Attribution Report" is an artifact type. "Daily Attribution" and "Monthly At
 | VaR (£, % of NAV) | Number |
 | Budget utilisation (% of limit) | Number + threshold flag (breach Y/N) |
 | Percentile rank in historical VaR distribution | Number |
-| Level label ("normal" / "elevated" / "high" / "extreme") | Text |
+| Percentile meaning (prose: "about average" / "worth a look" / "investigate" / "escalate") | Text |
 | Plain-language summary | Text (2-3 sentences) |
 
 Point-in-time. The "when" is a parameter. Could be intraday, daily, weekly — same structure. This is the most basic artifact. Everything else builds on it.

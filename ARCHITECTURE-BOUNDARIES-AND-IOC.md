@@ -247,10 +247,11 @@ class VaRInterpretation(Protocol):
 
 class StandardInterpretation:
     def describe_level(self, percentile: float) -> str:
-        if percentile > 0.95: return "extreme"
-        if percentile > 0.90: return "high"
-        if percentile > 0.80: return "elevated"
-        return "normal"
+        if percentile >= 0.95: return "far beyond this portfolio's norm, escalate"
+        if percentile >= 0.90: return "unusually high for this portfolio, investigate"
+        if percentile >= 0.80: return "notably above this portfolio's norm, worth a look"
+        if percentile >= 0.50: return "about average for this portfolio"
+        return "lighter than usual for this portfolio"
 ```
 
 V1 has one interpretation. V5 might have a "client letter" interpretation that uses softer language. The engine calls `self.interpreter.describe_level(percentile)` — it doesn't know which words come out.
@@ -284,8 +285,8 @@ interpreter: VaRInterpretation = StandardInterpretation()
 # Domain
 portfolio = Portfolio(
     assets={'SPY': 0.40, 'EFA': 0.20, 'IEF': 0.25, 'GLD': 0.15},
-    notional=10_000_000,
-    risk_budget_pct=0.15,
+    nav=10_000_000,
+    risk_budget_annual_pct=0.15,
     var_confidence=0.95,
     var_window=252,
     risk_allocation_target={'SPY': 0.40, 'EFA': 0.20, 'IEF': 0.25, 'GLD': 0.15},
