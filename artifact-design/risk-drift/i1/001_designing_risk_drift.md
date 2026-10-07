@@ -1,0 +1,547 @@
+## My view
+
+Yes, this is the natural next stage after `001-risk-attribution.ipynb`, but the important conceptual step is not calculating another metric. It is defining the **reference state against which current risk contribution is judged**.
+
+The current notebook answers:
+
+> Where does structural portfolio volatility come from at this observation date?
+
+Risk-contribution drift would answer:
+
+> Has the portfolio’s risk distribution moved away from the risk distribution we intend to maintain?
+
+That second question is normative. It cannot be answered from the current covariance matrix alone.
+
+---
+
+## What the current notebook already gives us
+
+The notebook currently has:
+
+- a fixed four-asset portfolio:
+  - SPY: 40%
+  - EFA: 20%
+  - IEF: 25%
+  - GLD: 15%
+- a trailing 252-day covariance estimate;
+- current portfolio volatility;
+- each asset’s signed percentage contribution to portfolio volatility;
+- comparison between two observation dates.
+
+The attribution output therefore gives us the **observed risk state**:
+
+```text
+Observed risk contribution:
+SPY  61%
+EFA  18%
+IEF  12%
+GLD   9%
+```
+
+The missing object is something like:
+
+```text
+Target risk contribution:
+SPY  45%
+EFA  20%
+IEF  20%
+GLD  15%
+```
+
+Then drift could be:
+
+```text
+Risk contribution drift
+= current contribution - target contribution
+```
+
+For example:
+
+```text
+SPY  +16 percentage points
+EFA   -2 percentage points
+IEF   -8 percentage points
+GLD   -6 percentage points
+```
+
+That creates a useful ranked diagnostic. But we first need to decide where the target numbers come from.
+
+---
+
+# Where could target risk contributions come from?
+
+There are four possible interpretations.
+
+## Option 1: Equal risk contribution
+
+Each asset is assigned 25% of portfolio risk.
+
+```text
+SPY  25%
+EFA  25%
+IEF  25%
+GLD  25%
+```
+
+This is effectively a risk-parity objective.
+
+### Strengths
+
+- Simple and easy to explain.
+- Provides a clear benchmark.
+- Makes the calculation interesting because equal capital weights do not create equal risk contributions.
+
+### Weaknesses
+
+- It introduces a risk-parity investment philosophy that the current portfolio has not established.
+- It treats SPY, EFA, IEF and GLD as if they should have equal strategic importance.
+- It would make the project appear to be solving a different problem from the stated 60/40-style multi-asset portfolio.
+
+I would not choose this as the default unless we explicitly decide that the portfolio is becoming a risk-parity portfolio.
+
+---
+
+## Option 2: Target contribution implied by the current strategic weights
+
+Take the strategic weights:
+
+```text
+SPY  40%
+EFA  20%
+IEF  25%
+GLD  15%
+```
+
+Then calculate the risk contribution implied by those weights and a designated reference covariance matrix.
+
+In symbols:
+
+```text
+target risk contribution
+= attribution(target weights, reference covariance)
+```
+
+This is more defensible because it says:
+
+> The strategic allocation is the policy decision. Its risk contribution is the risk profile implied by that allocation.
+
+The target may not be equal:
+
+```text
+SPY  54%
+EFA  18%
+IEF  16%
+GLD  12%
+```
+
+That is not a problem. The portfolio may intentionally carry more equity risk than bond or gold risk.
+
+### The critical choice
+
+What covariance matrix defines the target?
+
+Possibilities include:
+
+1. a historical reference window;
+2. a long-run covariance estimate;
+3. a policy covariance assumption;
+4. a covariance matrix specified directly as part of the mandate.
+
+For the current project, I would use a **frozen reference covariance estimate** initially, while being explicit that it is a calibration choice rather than an objective truth.
+
+For example:
+
+```text
+Target weights:
+fixed strategic allocation
+
+Reference covariance:
+252 daily returns ending on the policy calibration date
+
+Target risk contribution:
+calculated once and stored as the strategic risk profile
+```
+
+The current covariance is then compared against that frozen target profile.
+
+---
+
+## Option 3: Explicit risk-budget policy
+
+Instead of deriving targets from weights, define them directly as a mandate:
+
+```text
+Equity sleeve: 65% of portfolio risk
+Rates sleeve: 20%
+Gold: 15%
+```
+
+Or at asset level:
+
+```text
+SPY  45%
+EFA  20%
+IEF  20%
+GLD  15%
+```
+
+This is conceptually the cleanest answer to “where does the target come from?”:
+
+> It comes from an investment-policy decision, not from whatever the current market data happens to imply.
+
+However, it requires us to invent or justify the policy numbers. We should not pretend that arbitrary values are empirically derived.
+
+This option is strongest if the project wants to demonstrate mandate modelling. It would let us say:
+
+> The system distinguishes between the portfolio’s observed risk distribution and the risk distribution the investment policy is willing to tolerate.
+
+---
+
+## Option 4: Target risk contribution changes with the portfolio-construction model
+
+In a more complete systematic investment process, the target risk contribution might be generated by portfolio construction from:
+
+- expected returns;
+- risk estimates;
+- constraints;
+- risk aversion;
+- strategic allocations;
+- transaction costs.
+
+Then the target is a moving object:
+
+```text
+target risk contribution at t = f(expected returns, covariance, constraints, mandate)
+```
+
+This is closer to a real systematic investment-management process, but it is probably too large a jump right now. The current project does not yet have a signal-generation or portfolio-construction layer that can produce this target.
+
+---
+
+# Recommended direction
+
+I would recommend a two-layer design:
+
+## 1. Strategic target: explicit policy input
+
+Define a strategic target allocation:
+
+```text
+SPY  40%
+EFA  20%
+IEF  25%
+GLD  15%
+```
+
+This is the portfolio-construction or mandate-level object.
+
+## 2. Target risk profile: derived from a frozen reference covariance
+
+Calculate the risk contribution of those target weights using a designated reference covariance estimate.
+
+```text
+strategic target weights
+        +
+reference covariance
+        ↓
+target risk contribution
+```
+
+Then calculate current contribution using the current observation window:
+
+```text
+current weights
+        +
+current covariance
+        ↓
+current risk contribution
+```
+
+Finally:
+
+```text
+risk contribution drift
+= current risk contribution
+  - target risk contribution
+```
+
+This gives us a clear chain:
+
+```text
+Strategic allocation
+        ↓
+Target risk profile
+        ↓
+Current observed risk profile
+        ↓
+Risk contribution drift
+        ↓
+Potential rebalance investigation
+```
+
+The target is not “whatever risk contribution happened to occur at the previous observation date.” It is a policy-derived reference, calibrated using a specified covariance assumption.
+
+---
+
+# Important distinction: target weights versus target risk contributions
+
+These are not interchangeable.
+
+A portfolio can be exactly at its target weights while its risk contributions are far from target.
+
+For example:
+
+```text
+Weights:
+SPY  40%
+EFA  20%
+IEF  25%
+GLD  15%
+```
+
+But if equity volatility rises and equity correlations change, the same weights could produce:
+
+```text
+SPY  72% of risk
+EFA  13%
+IEF   5%
+GLD  10%
+```
+
+So there are two different drift questions:
+
+### Weight drift
+
+> Have market movements moved the holdings away from their target allocation?
+
+```text
+current weight - target weight
+```
+
+### Risk contribution drift
+
+> Has the portfolio’s risk distribution moved away from its intended profile?
+
+```text
+current risk contribution - target risk contribution
+```
+
+The second can occur even when weights have not changed.
+
+That distinction fits the rebalancing notes particularly well. The system should not assume that “rebalance” always means returning to fixed weights. It may instead mean restoring the portfolio’s intended risk state.
+
+---
+
+# What should the first RiskDrift artifact show?
+
+I would keep the first version descriptive rather than immediately producing trades.
+
+## Proposed artifact
+
+```text
+RISK CONTRIBUTION DRIFT
+
+Portfolio: 60/40 Multi-Asset
+Observation date: 2021-02-21
+
+Asset | Target risk | Current risk | Drift | Absolute drift
+SPY  |       54.0% |       67.0% | +13.0 pp | 13.0 pp
+EFA  |       18.0% |       16.0% |  -2.0 pp |  2.0 pp
+IEF  |       16.0% |       10.0% |  -6.0 pp |  6.0 pp
+GLD  |       12.0% |        7.0% |  -5.0 pp |  5.0 pp
+```
+
+I would also include:
+
+- signed drift;
+- absolute drift;
+- current portfolio volatility;
+- target reference date/window;
+- current estimation window;
+- whether the contributions sum to approximately 100%;
+- a tolerance band, if one is introduced.
+
+The key output is not initially:
+
+```text
+REBALANCE = TRUE
+```
+
+It is:
+
+> SPY is contributing more risk than its strategic risk profile implies, while IEF and GLD are contributing less.
+
+That supports investigation without pretending that the attribution alone determines the trade.
+
+---
+
+# Should risk contribution drift be measured in percentage points?
+
+Yes, for the first version.
+
+Use:
+
+```text
+drift_i = current_contribution_i - target_contribution_i
+```
+
+Measured in percentage points, this is directly interpretable:
+
+```text
++12 percentage points
+```
+
+I would avoid normalising by the target initially:
+
+```text
+(current - target) / target
+```
+
+because a small target contribution can produce an exaggerated relative number. For example, moving from 2% to 4% is a 100% relative increase but only a 2 percentage-point change.
+
+The first artifact should answer:
+
+> How many points of the portfolio’s risk contribution have moved away from target?
+
+---
+
+# What should trigger a rebalance?
+
+This is a separate decision from calculating drift.
+
+A sensible progression would be:
+
+## Stage 1: Measure drift
+
+```text
+current contribution
+versus
+target contribution
+```
+
+No action recommendation yet.
+
+## Stage 2: Add tolerance bands
+
+For example:
+
+```text
+SPY target: 54%
+Allowed band: 49%–59%
+Current: 67%
+→ outside band
+```
+
+The band could initially be:
+
+- an absolute percentage-point tolerance;
+- the same tolerance for every asset;
+- explicitly labelled as a prototype policy assumption.
+
+## Stage 3: Generate a rebalance investigation
+
+The output might say:
+
+```text
+RISK DRIFT OUTSIDE POLICY BAND
+
+Primary observation:
+SPY risk contribution is 13 percentage points above target.
+
+Potential implication:
+The portfolio is carrying more equity risk than its strategic risk profile allows.
+
+Investigation required:
+Assess whether risk should be reduced through SPY/EFA,
+or whether the target risk profile itself should be revised.
+```
+
+## Stage 4: Generate candidate trades
+
+Only after we can model post-trade risk:
+
+```text
+candidate weights
+        ↓
+recalculate covariance-based risk
+        ↓
+compare resulting risk contributions
+        ↓
+check turnover and constraints
+```
+
+This preserves the distinction in the rebalancing note between:
+
+- current portfolio;
+- target portfolio;
+- portfolio actually chosen to trade toward.
+
+---
+
+# One issue to settle: asset-level or sleeve-level targets?
+
+The current attribution is asset-level, so asset-level drift is the obvious implementation step.
+
+But the investment logic may be stronger at sleeve level:
+
+```text
+Equities: SPY + EFA
+Rates: IEF
+Real assets: GLD
+```
+
+The mandate may reasonably specify:
+
+```text
+Equity risk: 70%
+Rates risk: 15%
+Real-assets risk: 15%
+```
+
+rather than precise risk budgets for SPY versus EFA.
+
+This matters because SPY and EFA are both equity assets. A target such as:
+
+```text
+SPY: 45% of risk
+EFA: 20% of risk
+```
+
+implies a specific internal equity allocation policy. If that is not intentional, the system could over-interpret noise between the two equity ETFs.
+
+My recommendation:
+
+- retain **asset-level attribution** as the diagnostic substrate;
+- start with an **asset-level target** for simplicity;
+- explicitly identify sleeve-level risk budgets as the likely next refinement;
+- do not claim that asset-level targets are necessarily the true mandate.
+
+---
+
+# The resulting vertical slice
+
+This would give the project a coherent progression:
+
+```text
+Portfolio risk
+    ↓
+Risk attribution
+    ↓
+Risk contribution change
+    ↓
+Risk contribution drift
+    ↓
+Tolerance-band decision
+    ↓
+Candidate rebalance
+    ↓
+Post-trade risk assessment
+```
+
+The next artifact is therefore not yet a full rebalancing system. It is a **Risk Contribution Drift report** that introduces the reference state required for a future rebalance decision.
+
+The business question becomes:
+
+> Is the portfolio’s current risk distribution still consistent with its strategic risk profile?
+
+That is a stronger next step than simply comparing current weights to target weights, because it demonstrates that the system understands the difference between **capital allocation** and **risk allocation**.

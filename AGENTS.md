@@ -9,6 +9,8 @@ The project is not the software. The project is the business workflow. The softw
 
 The goal here is to demonstrate workflow thinking not cosplay an investment mangaement firm.
 
+Ultimately this project is for my CV initially so should be scoped down so we can move fast and I can get a solid project on my CV.
+
 ## Vertical Slices
 
 A thin thread through one specific investment management business workflow, starting from a real business decision and working down the implementation chain. Identify the decision, then we build what is needed to support it.
@@ -35,4 +37,10 @@ A thin thread through one specific investment management business workflow, star
     - Articles or blogs
     - Discussion questions
 
-#
+## Note on clarity of mathematical explanations
+
+If you're going to use equations, every equation should be explained, the terms explained and no steps skipped. Don't assume I understand your notation conventions.
+
+## Progressive Sophistication
+
+Start with a crude simple version to prove out the workflow and get it in use. Let usage justify complexity. Witnessing the failure modes that introduce complex solutions is important for learning too.

@@ -8,30 +8,30 @@ def render_snapshot_markdown(snapshot):
 
     return f"""
 ## RISK SNAPSHOT — {snapshot.portfolio_name}
-**{_format_timestamp(snapshot.timestamp)}**
+**{_format_timestamp(snapshot.timestamp)}**<br>
 
 ### Portfolio
-NAV: £{snapshot.nav:,.0f}
+NAV: £{snapshot.nav:,.0f}<br>
 
 ### Portfolio VaR
-£{snapshot.var_currency:,.0f} ({snapshot.var_pct:.2%} of NAV daily)
+£{snapshot.var_currency:,.0f} ({snapshot.var_pct:.2%} of NAV daily)<br>
 
 ### Risk Budget
-Annualised VaR: {snapshot.var_annualised_pct:.1%} of NAV  |  Limit: {snapshot.risk_budget_annual_pct:.0%} of NAV
+Annualised VaR: {snapshot.var_annualised_pct:.1%} of NAV  |  Limit: {snapshot.risk_budget_annual_pct:.0%} of NAV<br>
 
-{utilisation_bar} **{snapshot.budget_utilisation:.0%}** utilised
-{breach_icon}
+{utilisation_bar} **{snapshot.budget_utilisation:.0%}** utilised<br>
+{breach_icon}<br>
 
 *Limit = {snapshot.risk_budget_annual_pct:.0%} annualised VaR at 95% confidence — the maximum loss the
 mandate allows in a typical year, set by the Investment Policy Statement.*
 
 ### Is This Normal?
-{level_bar} **{ordinal} percentile**
+{level_bar} **{ordinal} percentile**<br>
 
 Today's VaR ranks at the {ordinal} percentile of this portfolio's own trailing VaR history since {lookback} — {snapshot.percentile_meaning}.
 
 ### Decision
-→ {snapshot.decision}
+→ {snapshot.decision}<br>
 """
 
 
